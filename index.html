@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shadee.Care Prototype</title>
+  
+  <link rel="icon" type="image/png" href="https://thrive.shadee.care/landing/assets/favicon.png">
+  
+  <!-- External Stylesheets -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <style>
+    /* --- Root Variables & Global Styles --- */
+    :root {
+      /* IMPORTANT: This Z-Index token map should never be removed. */
+      --z-bg: -1;
+      --z-section-decor: 0;
+      --z-content: 10;
+      --z-hero-bubbles: 15;
+      --z-hero-copy: 30;
+      --z-hero-logo: 40;
+      --z-nav: 900;
+      --z-tooltip: 1000;
+      
+      --primary: #685EDA;
+      --secondary: #51E7E8;
+      --accent-light: #8f84fd;
+      --text-light: #ffffff;
+      --text-dark: #222;
+      --gradient-hero: linear-gradient(to bottom, var(--primary) 0%, var(--secondary) 100%);
+      --gradient-content: linear-gradient(to bottom, var(--secondary) 0%, var(--primary) 100%);
+      --error-bg: #e53e3e;
+      --success-bg: #38a169;
+      --gradient-purple: linear-gradient(135deg, #a58cfb 0%, #8f84fd 100%);
+      --gradient-green: linear-gradient(135deg, #6afc9b 0%, #56d484 100%);
+      --gradient-blue: linear-gradient(135deg, #94d1ff 0%, #7cc2ff 100%);
+      --gradient-orange: linear-gradient(135deg, #fbb24a 0%, #f87a3d 100%);
+      --gradient-teal: linear-gradient(135deg, #51E7E8 0%, #34C9CB 100%); /* Added for consistency */
+    }
+
+    /* Prevents layout jump when scrollbar appears */
+    html {
+      overflow-y: scroll;
+      scroll-behavior: smooth; 
+    }
+
+    /* Disables scrolling when the mobile menu is open */
+    html.menu-open {
+      overflow: hidden;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: "Inter", sans-serif;
+      color: var(--text-light);
+      box-sizing: border-box;
+    }
+
+    *, *::before, *::after { 
+      box-sizing: inherit; 
+    }
+
+    /* --- HERO SECTION STYLES --- */
+    .hero{
+      position:relative;
+      height:100vh;
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      background: var(--gradient-hero);
+    }
+    #hero-logo{
+      position:absolute;
+      top:2rem;
+      left:2rem;
+      width:150px;
+      height:auto;
+      z-index:var(--z-hero-logo);
+      pointer-events:auto;
+    }
+    .hero__copy{
+      position:relative;
+      z-index:var(--z-hero-copy);
+      color:#fff;
+      text-align:center;
+      padding:1rem;
+    }
+    .hero__copy h1,
+    .hero__copy p {
+      text-shadow: 0 2px 4px rgba(45, 40, 80, 0.5);
+    }
+    .hero__copy h1{font-size:clamp(2.8rem,5vw,4.8rem);font-weight:800;line-height:1.1}
+    .hero__copy h1 span{color:#9257FF}
+    .hero__copy p{
+      margin-top:1rem;
+      font-size:1.1rem;
+      opacity:.9;
+      white-space:normal;
+      margin-inline:auto;
+      max-width: 820px;
+    }
+    .hero__buttons{display:flex;gap:1rem;justify-content:center;margin-top:2rem}
+    .btn{
+      background: var(--gradient-purple);
+      color:#fff;
+      padding:.75rem 1.75rem;
+      border-radius:.5rem;
+      font-weight:600;
+      font-size:1rem;
+      text-decoration:none;
+      white-space:nowrap;
+      box-shadow: none;
+      transition: filter .25s, box-shadow 0.3s ease-in-out; 
+    }
+    .btn:hover{
+      filter:brightness(1.15);
+      box-shadow: 0 4px 8px rgba(45, 40, 80, 0.5);
+    }
+    .btn--ghost{
+      background:#fff;
+      color: var(--primary);
+    }
+    #svg-blob-layer{position:absolute;inset:0;pointer-events:none;z-index:var(--z-section-decor)}
+    .blob{position:absolute;pointer-events:auto}
+    .blob path{fill:none;stroke:#fff;stroke-width:0.2;stroke-linejoin:round;stroke-linecap:round}
+    #bubble-layer{position:absolute;inset:0;z-index:var(--z-content)}
+    canvas.bubble{
+      position:absolute;
+      left:0;
+      top:0;
+      transition:opacity .4s;
+      opacity:0.9;
+      filter: blur(3px);
+    }
+    #hero-menu{position:absolute;top:2rem;right:2rem;z-index:var(--z-nav)}
+    #hero-menu ul{list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:1.5rem}
+    #hero-menu ul li{position:relative}
+    #hero-menu ul li a:not(.btn--menu-cta),.info-icon-link{
+      color:#fff;
+      text-decoration:none;
+      font-weight:500;
+      font-size:.95rem;
+      transition:opacity .2s ease-in-out;
+      padding-top:.5rem;
+      padding-bottom:.5rem;
+    }
+    #hero-menu ul li a:not(.btn--menu-cta):hover,.info-icon-link:hover .info-icon{opacity:.8}
+    .btn--menu-cta{
+      padding:.75rem;
+      font-size:.9rem;
+      font-weight:600;
+      background-color:#685EDA;
+      color:#fff;
+      border:1.5px solid #fff;
+      border-radius:.5rem;
+      text-decoration:none;
+      display:inline-block;
+      text-align:center;
+      white-space:nowrap;
+      box-shadow: none;
+      transition: background-color .2s, box-shadow .3s ease-in-out;
+    }
+    .btn--menu-cta:hover{
+      background-color:#796fb9;
+      box-shadow: 0 4px 8px rgba(45, 40, 80, 0.5);
+      opacity:1;
+    }
+    #hero-menu .submenu{
+      visibility:hidden;
+      opacity:0;
+      position:absolute;
+      top:100%;
+      left:0;
+      background-color:#2c2058;
+      padding:.5rem 0;
+      border-radius:8px;
+      min-width:180px;
+      z-index:calc(var(--z-nav) + 1);
+      box-shadow:0 4px 10px rgba(0,0,0,0.3);
+      transition:opacity .2s ease-in-out,visibility 0s linear .2s;
+      display:block;
+    }
+    #hero-menu li.has-submenu:hover>.submenu,#hero-menu li.has-submenu:focus-within>.submenu{
+      visibility:visible;
+      opacity:1;
+      transition-delay:0s;
+    }
+    #hero-menu .submenu li{width:100%;display:block}
+    #hero-menu .submenu li a{padding:.6rem 1.2rem;display:block;white-space:nowrap;color:#fff;font-size:.9rem;text-align:left}
+    #hero-menu .submenu li a:hover{background-color:rgba(255,255,255,0.1)}
+    #hamburger-button{
+      display:none;
+      background:none;
+      border:none;
+      padding:0;
+      cursor:pointer;
+      z-index:calc(var(--z-nav) + 2);
+      position:fixed;
+      top:2rem;
+      right:2rem;
+      width:30px;
+      height:22px;
+    }
+    #hamburger-button span{
+      display:block;
+      width:100%;
+      height:3px;
+      background-color:#fff;
+      margin-bottom:5px;
+      border-radius:3px;
+      transition:transform .3s ease-in-out,opacity .3s ease-in-out,background-color .3s ease-in-out;
+    }
+    #hamburger-button span:last-child{margin-bottom:0}
+    #hamburger-button.active span{background-color:#fff}
+    #hamburger-button.active span:nth-child(1){transform:translateY(8px) rotate(45deg)}
+    #hamburger-button.active span:nth-child(2){opacity:0}
+    #hamburger-button.active span:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
+    #menu-list-container{display:block}
+    .tooltip-container{position:relative;display:inline-flex;align-items:center}
+    .info-icon-link{padding-top:.5rem!important;padding-bottom:.5rem!important;padding-left:0!important;padding-right:0!important}
+    .info-icon{cursor:help;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;line-height:1}
+    .tooltip-text{
+      visibility:hidden;
+      width: 300px;
+      min-width:150px;
+      white-space:normal;
+      text-align:left;
+      background-color:#fff;
+      color:#333;
+      border:1px solid #ddd;
+      border-radius:6px;
+      padding:8px 12px;
+      position:absolute;
+      z-index:var(--z-tooltip);
+      top:140%;
+      left:50%;
+      margin-left: -150px;
+      opacity:0;
+      transition:opacity .3s ease-in-out,visibility 0s linear .3s;
+      font-size:.8rem;
+      box-shadow:0 2px 5px rgba(0,0,0,0.15);
+    }
+    .tooltip-container:hover .tooltip-text,.info-icon-link:focus + .tooltip-text,.info-icon-link:focus-within + .tooltip-text{
+      visibility:visible;
+      opacity:1;
+      transition-delay:0s;
+    }
+    .tooltip-text::after{
+      content:"";
+      position:absolute;
+      bottom:100%;
+      left:50%;
+      margin-left:-5px;
+      border-width:5px;
+      border-style:solid;
+      border-color:transparent transparent #fff transparent;
+    }
+    @media (max-width:860px){
+      #menu-list-container{
+        visibility:hidden;
+        opacity:0;
+        position:fixed;
+        inset:0;
+        background-color:#2c2058;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        padding:2rem;
+        overflow-y:auto;
+        transition:opacity .3s ease-in-out,visibility 0s linear .3s;
+        z-index: var(--z-nav);
+      }
+      #menu-list-container.active{
+        display:flex;
+        visibility:visible;
+        opacity:1;
+        transition-delay:0s;
+      }
+      #hero-menu ul{
+        flex-direction:column;
+        align-items:center;
+        gap:1rem;
+        width:auto;
+        padding:0;
+        background-color:transparent;
+        box-shadow:none;
+        border-radius:0;
+      }
+      #hero-menu ul li{width:auto;text-align:center}
+      #hero-menu ul li a,.info-icon-link{font-size:1.5rem;padding:.75rem 1rem;display:block}
+      #hero-menu ul li a.btn--menu-cta{
+        font-size:1.3rem;
+        padding:1rem;
+        white-space:nowrap;
+        text-align:center;
+        margin-top:1rem;
+        width:auto;
+        display:inline-block;
+      }
+      #hero-menu .submenu{
+        position:static;
+        display:block;
+        background-color:transparent;
+        visibility:visible;
+        opacity:1;
+        box-shadow:none;
+        padding:.5rem 0 0 1rem;
+        border-radius:0;
+        min-width:auto;
+        text-align:center;
+        transition:none;
+      }
+      #hero-menu .submenu li{margin-bottom:.5rem}
+      #hero-menu .submenu li a{font-size:1.2rem;padding:.5rem 0;color:rgba(255,255,255,0.8)}
+      #hero-menu .submenu li a:hover{color:#fff;background-color:transparent}
+      #hamburger-button{display:flex;flex-direction:column;justify-content:space-around}
+      .tooltip-container{display:flex;justify-content:center;width:auto;margin-bottom:.5rem}
+      .tooltip-text{
+        top:120%;
+        left:50%;
+        transform:translateX(-50%);
+        margin-left:0;
+        right:auto;
+        min-width:250px;
+        width:auto;
+        max-width:80vw;
+      }
+      .tooltip-text::after{
+        bottom:100%;
+        top:auto;
+        left:50%;
+        margin-left:-5px;
+        border-color:transparent transparent #fff transparent;
+      }
+    }
+
+    /* --- Main Content Section Styles --- */
+    .content {
+      background: var(--gradient-content);
+      padding: 4rem 1rem;
+      position: relative;
+      isolation: isolate; 
+    }
+
+    .section-container {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 24px;
+      padding: 2.5rem;
+      max-width: 1100px;
+      margin: 0 auto 6rem;
+    }
+
+    #for-parents.section-container {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s ease-in-out;
+    }
+    #for-parents.section-container:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.15);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .section {
+      max-width: 1024px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    #about {
+      margin-bottom: 6rem;
+    }
+
+    .section h2 { margin-bottom: 1rem; font-size: 2.25rem; }
+    .section h3 { font-size: 1.75rem; margin: 0 0 1rem 0; }
+    .section p {
+      max-width: 820px;
+      margin: 0 auto 1.5rem;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 2px 4px rgba(45, 40, 80, 0.5);
+    }
+    #about p { text-align: center; }
+
+    .section h2,
+    .section h3,
+    .card h3 {
+      text-shadow: 0 2px 4px rgba(45, 40, 80, 0.5);
+    }
+
+    .section-main-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: var(--gradient-purple);
+      font-size: 2.5rem;
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      text-shadow: none;
+    }
+    .section-description {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.85);
+      max-width: 550px;
+      margin: 0 auto 2rem;
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 1.5rem;
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .card-grid.two { grid-template-columns: repeat(2, 1fr); }
+    .card-grid.three { grid-template-columns: repeat(3, 1fr); }
+    .card-grid.four { grid-template-columns: repeat(2, 1fr); }
+
+    .section-container:has(.four) .card-grid { margin-bottom: 0; }
+
+    .card {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 2rem 1.5rem;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--text-light);
+      transition: all 0.3s ease-in-out;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card.non-clickable {
+      cursor: default;
+    }
+    .card.non-clickable:hover {
+      transform: none;
+      filter: none;
+      box-shadow: none;
+    }
+    .card.non-clickable:hover::before {
+      opacity: 0;
+    }
+
+    .card::before,
+    #for-parents.section-container::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url('https://thisiscontagious.com/temp/shadee_thrive/assets/hands.jpg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      z-index: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    .card.card-youths::before {
+      background-image: url('https://thrive.shadee.care/landing/assets/1-in-3.jpg');
+    }
+    .card.card-impact::before {
+      background-image: url('https://thrive.shadee.care/landing/assets/amplify.jpg');
+    }
+    .card.card-resilience::before {
+      background-image: url('https://thrive.shadee.care/landing/assets/empower.jpg');
+    }
+    #for-parents.section-container::before {
+      background-image: url('https://thrive.shadee.care/landing/assets/parent.jpg');
+    }
+    .card.card-partnership::before {
+      background-image: url('https://thrive.shadee.care/landing/assets/partnership.jpg');
+    }
+    .card.card-ecosystem::before {
+      background-image: url('https://thrive.shadee.care/landing/assets/plant.jpg');
+    }
+    .card.card-science::before {
+      background-image: url('https://thrive.shadee.care/landing/assets/science.jpg');
+    }
+    .card.card-narrative::before {
+      background-image: url('https://thrive.shadee.care/landing/assets/narrative.jpg');
+    }
+    .card.card-hacks::before {
+      background-image: url('https://thrive.shadee.care/landing/assets/hack.jpg');
+    }
+    .card.card-madoka::before {
+      background-image: url('https://thrive.shadee.care/landing/assets/madoka.jpg');
+    }
+    .card.card-izumi::before {
+      background-image: url('https://thrive.shadee.care/landing/assets/izumi.jpg');
+    }
+
+    .card:hover::before,
+    #for-parents.section-container:hover::before {
+      opacity: 0.15;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.15);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .card > *,
+    #for-parents.section-container > .section {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card h3 {
+      margin: 1.25rem 0 0.75rem;
+      font-size: 1.25rem;
+      color: var(--text-light); 
+      font-weight: 600;
+    }
+    .card p { 
+      margin: 0 auto 1.5rem;
+      line-height: 1.6; 
+      color: rgba(255, 255, 255, 0.9); 
+      flex-grow: 1;
+    }
+    .icon {
+      font-size: 1.75rem; 
+      margin-bottom: 0;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      text-shadow: none;
+      background: var(--gradient-purple);
+    }
+    .icon.pr { background: var(--gradient-purple); }
+    .icon.ec { background: var(--gradient-green); }
+    .icon.sb { background: var(--gradient-blue); }
+    .icon.sg { background: var(--gradient-orange); }
+
+    .beta-tag {
+      display: inline-block;
+      padding: 0.2em 0.7em;
+      font-size: 0.7rem;
+      font-weight: 600;
+      line-height: 1;
+      color: var(--text-light);
+      background-color: var(--accent-light);
+      border-radius: 999px;
+      vertical-align: middle;
+      margin-left: 0.5em;
+    }
+
+    .form-section {
+      max-width: 600px;
+      margin: 0 auto;
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
+      color: var(--text-light);
+      box-shadow: none;
+    }
+    .form-section h2 {
+      margin-bottom: 2rem;
+      font-size: 2.2rem;
+      text-align: center;
+      color: var(--text-light);
+      text-shadow: 0 2px 4px rgba(45, 40, 80, 0.5);
+    }
+    .form-section label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-size: 1rem;
+      color: var(--text-light);
+      text-align: left;
+      font-weight: 400;
+    }
+    .form-section input[type="text"],
+    .form-section input[type="email"] {
+      width: 100%;
+      padding: 0.85rem 1.2rem;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 6px;
+      font-size: 1rem;
+      margin-bottom: 1.25rem;
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text-dark);
+    }
+    .form-section input,
+    .footer-mailing-list button {
+      text-shadow: none;
+    }
+    .form-section input[type="text"]:focus,
+    .form-section input[type="email"]:focus {
+      outline: 2px solid var(--primary);
+      background: #fff;
+    }
+    .form-section .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .form-section .checkbox-group label {
+      display: flex;
+      align-items: center;
+      font-size: 1rem;
+      color: var(--text-light);
+      font-weight: 400;
+      margin-bottom: 0;
+    }
+    .form-section .checkbox-group input[type="checkbox"] {
+      margin-right: 0.75em;
+      accent-color: var(--primary);
+      transform: scale(1.15);
+      text-shadow: none;
+    }
+    #form-message {
+      padding: 0.75rem 1.2rem;
+      margin-bottom: 1.5rem;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 500;
+      display: none;
+    }
+    #form-message.error {
+      background-color: var(--error-bg);
+      color: var(--text-light);
+      display: block;
+    }
+    #form-message.success {
+      background-color: var(--success-bg);
+      color: var(--text-light);
+      display: block;
+    }
+    .form-section button {
+      display: block;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0.9rem 0;
+      border: none;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+      color: var(--text-light);
+      font-size: 1.2rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      box-shadow: none;
+      transition: opacity 0.2s, box-shadow 0.3s ease-in-out;
+    }
+    .form-section button:hover {
+      opacity: 0.88;
+      box-shadow: 0 4px 8px rgba(45, 40, 80, 0.5);
+    }
+    .form-section button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .recaptcha-notice {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.7);
+      text-align: center;
+      margin-top: 1.5rem;
+      max-width: 400px;
+      margin-inline: auto;
+      line-height: 1.5;
+    }
+    .recaptcha-notice a {
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: underline;
+    }
+
+    .section button,
+    .section a.btn-card,
+    .section a.btn-section {
+      display: inline-block;
+      text-decoration: none;
+      margin-top: 0;
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--gradient-purple);
+      color: var(--text-light);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: none;
+      transition: opacity 0.2s ease-in-out, box-shadow 0.3s ease-in-out;
+      text-shadow: none;
+    }
+    .section button:hover,
+    .section a.btn-card:hover,
+    .section a.btn-section:hover { 
+      opacity: 0.9;
+      box-shadow: 0 4px 8px rgba(45, 40, 80, 0.5);
+    }
+    .section button.btn-outline,
+    .section a.btn-card.btn-outline {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .section button.btn-outline:hover,
+    .section a.btn-card.btn-outline:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: #fff;
+      color: #fff;
+    }
+
+    /* --- Footer Styles --- */
+    .site-footer {
+      background-color: #7b78d1;
+      color: var(--text-light);
+      padding: 3rem 2rem;
+      font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .footer-bottom-bar {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding-top: 0;
+      border-top: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .footer-copyright {
+      opacity: 0.8;
+    }
+
+    /* --- Cursor Effects --- */
+    .cursor-bubble {
+      position: fixed;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      background: transparent;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      animation: cursor-bubble-fade 1.2s ease-out forwards;
+    }
+
+    @keyframes cursor-bubble-fade {
+      0% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(2.2) translateY(-40px);
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .cursor-bubble {
+        display: none;
+      }
+    }
+
+    /* --- Fixed Action Buttons --- */
+    #fixed-actions-container {
+      position: fixed;
+      bottom: 9rem; 
+      right: 2rem;
+      z-index: 1010; 
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+    }
+    .fixed-action-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-decoration: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+      transition: all 0.2s ease-in-out;
+    }
+    .fixed-action-btn:hover {
+      transform: scale(1.1);
+      filter: brightness(1.1);
+    }
+    #scrollTopBtn {
+      background: rgba(0, 0, 0, 0.4);
+      font-size: 1.2rem;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+    }
+    #scrollTopBtn.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    /* --- Global Media Queries --- */
+    @media (max-width: 768px) {
+      .card-grid.two,
+      .card-grid.three,
+      .card-grid.four {
+        grid-template-columns: 1fr;
+      }
+      .footer-bottom-bar {
+        flex-direction: column-reverse;
+        gap: 1.5rem;
+        align-items: center;
+      }
+    }
+    @media (max-width: 600px) {
+      .section-container {
+        padding: 1.5rem;
+      }
+      .section h2 { font-size: 1.8rem; }
+      #fixed-actions-container {
+        bottom: 8rem;
+        right: 1rem;
+      }
+      .site-footer {
+        padding: 3rem 1.5rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <section class="hero">
+    <div id="hero-animation-layer">
+      <div id="svg-blob-layer"></div>
+      <div id="bubble-layer"></div>
+    </div>
+    <img src="https://thisiscontagious.com/temp/shadeelogo-10.svg" alt="Shadee Logo" id="hero-logo" />
+    <nav id="hero-menu">
+      <button id="hamburger-button" aria-label="Open Menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div id="menu-list-container">
+        <ul>
+          <li class="tooltip-container">
+            <a href="#" class="info-icon-link" aria-label="Information">
+              <span class="info-icon">ⓘ</span>
+            </a>
+            <span class="tooltip-text">In a VUCA world, your perspective will define your future. Choose to have a ‘Better Shade of Life.</span>
+          </li>
+          <li><a href="#about">About</a></li>
+          <li class="has-submenu">
+            <a href="#csr">Partnerships</a>
+            <ul class="submenu">
+              <li><a href="#csr">> CSR</a></li>
+              <li><a href="#for-parents">> For Parents</a></li>
+            </ul>
+          </li>
+          <li><a href="#programs">Programs</a></li>
+          <li><a href="#contact" class="btn--menu-cta">Get In Touch</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="hero__copy">
+      <h1>Thriving in the <br/><span>Future of Work</span></h1>
+      <p>
+        We build workplace wellbeing, emotional capital, cognitive agility, and a resilient mindset for the young adult workforce.
+      </p>
+      <div class="hero__buttons">
+        <a class="btn" href="#contact">Contact Us</a>
+        <a class="btn btn--ghost" href="#programs">Explore Programs</a>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <div class="content">
+      <div id="about" class="section">
+        <h2>About Shadee.Care</h2>
+        <p>Thrive supports young adults so that they can grow, perform and lead at the workplace. We help the next generation to build effective meta-competencies to transition into thriving leaders, parents and bosses.</p>
+        <p>Shadee.Care is a Singapore charity empowering young adults to flourish through holistic wellbeing solutions for the different domains of life. Our programs are science-backed, professionally verified and customizable for every organization.</p>
+        <p>Starting out with Vibe.Shadee.Care, a wellbeing resource for teens, we recognize the need to support young adults that are entering or new in the workforce.</p>
+      </div>
+      
+      <div id="csr" class="section-container">
+        <div class="section invest-section">
+          <h2>Invest in Our Future Generation</h2>
+          <div class="card-grid three">
+            <div class="card card-youths non-clickable"><div class="icon"><i class="fa-regular fa-heart"></i></div><h3>1 in 3 Youths Face Severe Mental Health Challenges</h3><p>These young individuals are tomorrow’s leaders, parents, and innovators. Mental health struggles can impact their potential at work and in life.</p></div>
+            <div class="card card-impact non-clickable"><div class="icon" style="background: var(--gradient-orange);"><i class="fa-regular fa-handshake"></i></div><h3>Amplify Your Impact Through Brand-Aligned Initiatives</h3><p>Co-create wellbeing campaigns that reflect your values. Partner with us to spark awareness and lasting change through your CSR efforts.</p></div>
+            <div class="card card-resilience non-clickable"><div class="icon" style="background: var(--gradient-blue);"><i class="fa-solid fa-users"></i></div><h3>Empower Resilience and Recovery Together</h3><p>Your partnership equips young people with the mindset and skills to thrive. Let’s empower different youth communities by building a culture of support and mental strength.</p></div>
+          </div>
+          <!-- MODIFIED: The link is now a simple anchor link -->
+          <a href="#contact" class="btn-section">Enquire Now</a>
+        </div>
+      </div>
+      
+      <div id="for-parents" class="section-container">
+        <div class="section">
+          <div class="section-main-icon">
+            <i class="fa-regular fa-comment"></i>
+          </div>
+          <h3>For Parents @ Work</h3>
+          <p class="section-description">Support for parents with teens. Learn, share and connect in our parent roundtable.</p>
+          <button>Join Parent Support</button>
+        </div>
+      </div>
+
+      <div id="programs" class="section-container">
+        <div class="section">
+          <h2>Young Adults @Work</h2>
+          <p class="section-description">We help young adults to build essential workplace competencies, wellbeing, emotional capital, cognitive agility and a resilient mindset.</p>
+          <div class="card-grid four">
+            <div class="card card-madoka">
+              <div class="icon" style="background: var(--gradient-blue);"><i class="fa-solid fa-gamepad"></i></div>
+              <h3>Mind Madoka Game</h3>
+              <p>RPG style workshop tackling real work-life scenarios to build self-mastery, teamwork and cognitive solutioning.</p>
+              <button>Learn More</button>
+            </div>
+            <div class="card card-narrative">
+              <div class="icon"><i class="fa-solid fa-comments"></i></div>
+              <h3>Narratives at Work</h3>
+              <p>Solving work challenges through shared stories, narratives and bite-size tips.</p>
+              <button>Learn More</button>
+            </div>
+            <div class="card card-hacks">
+              <div class="icon" style="background: var(--gradient-teal);"><i class="fa-solid fa-users"></i></div>
+              <h3>Work Hacks Group</h3>
+              <p>Smart tips & real-life support—join our community to level up fast.</p>
+              <a href="https://form.jotform.com/251888548705977" target="_blank" rel="noopener noreferrer" class="btn-card" style="background: var(--gradient-teal);">Join Work Hacks</a>
+            </div>
+            <div class="card card-izumi">
+              <div class="icon"><i class="fa-solid fa-robot"></i></div>
+              <h3>Izumi Chatbot <span class="beta-tag">Beta</span></h3>
+              <p>Had a rough day? Chat with Izumi for an instant mindset reset.</p>
+              <a href="https://agent.jotform.com/01961de050797ed0bc22f22a8e89122aac05" target="_blank" rel="noopener noreferrer" class="btn-card btn-outline">Try Izumi</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-container">
+        <div class="section">
+          <h2>Why <span style="color:#8f3cff">Shadee.Care?</span></h2>
+          <div class="card-grid three">
+            <div class="card card-partnership"><div class="icon pr"><i class="fa-regular fa-handshake"></i></div><h3>Partnership Ready</h3><p>Co-create campaigns that align with your brand values and that speak to your audience. Enhance your CSR impact through trending youth-centric events.</p></div>
+            <div class="card card-ecosystem"><div class="icon ec"><i class="fa-solid fa-leaf"></i></div><h3>Ecosystem of Care</h3><p>Support your staff’s wellbeing while doing good. Our programs are free to access, and donations receive 2.5x tax deductions.</p></div>
+            <div class="card card-science"><div class="icon sb"><i class="fa-solid fa-medal"></i></div><h3>Science-Backed, Verified</h3><p>Designed with input from experts in Neuroscience, Psychology, Counselling, and Organizational Behavior, plus lived-experience advocates.</p></div>
+          </div>
+        </div>
+      </div>
+      
+      <div id="contact" class="section-container">
+        <div class="form-section">
+          <h2>Partner With <span>Shadee.Care</span></h2>
+          <form id="contact-form" novalidate>
+            <label for="name">Name</label>
+            <input id="name" type="text" placeholder="Enter your name" required />
+            <label for="org">Organization</label>
+            <input id="org" type="text" placeholder="Enter your organization" required />
+            <label for="email">Email (organization email)</label>
+            <input id="email" type="email" placeholder="Enter your organization email" required />
+            <label>Area of interest</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" name="interest" value="outreach" /> CSR Partnership</label>
+              <label><input type="checkbox" name="interest" value="parents" /> Parents Roundtable</label>
+              <label><input type="checkbox" name="interest" value="madoka" /> Mind Madoka Game</label>
+              <label><input type="checkbox" name="interest" value="support" /> Peer Support for Young Workers</label>
+              <label><input type="checkbox" name="interest" value="other" /> Other Areas</label>
+            </div>
+            <div id="form-message"></div>
+            <button type="submit">Submit</button>
+            <p class="recaptcha-notice">
+              This site is protected by reCAPTCHA and the Google
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> and
+              <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a> apply.
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <div id="fixed-actions-container">
+    <a href="#" id="scrollTopBtn" class="fixed-action-btn" aria-label="Scroll to top">
+      <i class="fa-solid fa-arrow-up"></i>
+    </a>
+  </div>
+  
+  <footer class="site-footer">
+    <div class="footer-bottom-bar">
+      <div class="footer-copyright">
+        © 2025 All Rights Reserved
+      </div>
+    </div>
+  </footer>
+
+  <!-- External Scripts -->
+  <script type="module" src="js/animations.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+      // --- Mobile Menu (Hamburger) Logic ---
+      const hamburgerBtn = document.getElementById('hamburger-button');
+      const menuContainer = document.getElementById('menu-list-container');
+      const htmlEl = document.documentElement;
+
+      if (hamburgerBtn && menuContainer) {
+        hamburgerBtn.addEventListener('click', () => {
+          hamburgerBtn.classList.toggle('active');
+          menuContainer.classList.toggle('active');
+          htmlEl.classList.toggle('menu-open');
+        });
+      }
+      
+      // --- Scroll-to-Top Logic ---
+      const scrollTopBtn = document.getElementById('scrollTopBtn');
+      
+      if (scrollTopBtn) {
+        const handleScroll = () => {
+          const showButtonThreshold = 300;
+          if (window.scrollY > showButtonThreshold) {
+            scrollTopBtn.classList.add('visible');
+          } else {
+            scrollTopBtn.classList.remove('visible');
+          }
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        
+        scrollTopBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+      
+      // --- Form Validation Logic ---
+      const form = document.getElementById('contact-form');
+      if (form) {
+        const messageDiv = document.getElementById('form-message');
+        const submitButton = form.querySelector('button[type="submit"]');
+        
+        const forbiddenDomains = [
+          'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'live.com', 
+          'aol.com', 'icloud.com', 'msn.com', 'protonmail.com', 'zoho.com',
+          'yandex.com', 'gmx.com', 'mail.com'
+        ];
+
+        form.addEventListener('submit', function(event) {
+          event.preventDefault();
+          messageDiv.textContent = '';
+          messageDiv.className = '';
+          const name = document.getElementById('name').value.trim();
+          const org = document.getElementById('org').value.trim();
+          const email = document.getElementById('email').value.trim();
+          const interests = document.querySelectorAll('input[name="interest"]:checked');
+
+          if (name === '' || org === '' || email === '') {
+            showMessage('Please fill out all required fields.', 'error');
+            return;
+          }
+          if (interests.length === 0) {
+            showMessage('Please select at least one area of interest.', 'error');
+            return;
+          }
+          const emailDomain = email.split('@')[1];
+          if (!emailDomain || forbiddenDomains.includes(emailDomain.toLowerCase())) {
+            showMessage('Please use a valid organization email. Free email providers are not accepted.', 'error');
+            return;
+          }
+
+          showMessage('Thank you for your submission! We will be in touch shortly.', 'success');
+          submitButton.disabled = true;
+          
+          console.log("Form Submitted:", {
+              name: name,
+              organization: org,
+              email: email,
+              interests: Array.from(interests).map(cb => cb.value)
+          });
+
+          setTimeout(() => {
+              form.reset();
+              submitButton.disabled = false;
+              messageDiv.textContent = '';
+              messageDiv.className = '';
+          }, 4000);
+        });
+
+        function showMessage(message, type) {
+          messageDiv.textContent = message;
+          messageDiv.className = type;
+        }
+      }
+      
+    });
+  </script>
+  
+  <!-- Real Chatbot Embed -->
+  <script src='https://cdn.jotfor.ms/agent/embedjs/01961de050797ed0bc22f22a8e89122aac05/embed.js?skipWelcome=1&maximizable=1'></script>
+
+</body>
+</html>
